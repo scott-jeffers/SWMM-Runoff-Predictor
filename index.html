@@ -14,33 +14,40 @@
     <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
     <style>
         :root {
-            --bg-color: #f8f9fa;
-            --surface-color: #ffffff;
-            --primary-color: #007bff;
-            --primary-hover-color: #0056b3;
-            --secondary-color: #6c757d;
-            --danger-color: #dc3545;
-            --success-color: #28a745;
-            --text-color: #212529;
-            --border-color: #dee2e6;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --bg-color: #0f172a;
+            --surface-color: #111827;
+            --card-color: #0b1220;
+            --primary-color: #22d3ee;
+            --primary-hover-color: #06b6d4;
+            --secondary-color: #6b7280;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --text-color: #e5e7eb;
+            --text-muted: #93a3b8;
+            --border-color: #1f2937;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             --font-family: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             font-family: var(--font-family);
-            background-color: var(--bg-color);
+            background: linear-gradient(135deg, #0b1020, #0f172a 30%, #0a1020 100%);
             color: var(--text-color);
             margin: 0;
             padding: 2rem;
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            min-height: 100vh;
         }
 
         .container {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 380px 1fr;
             grid-template-rows: auto 1fr;
             gap: 2rem;
             max-width: 1800px;
@@ -53,19 +60,23 @@
         .panel {
             background-color: var(--surface-color);
             padding: 2rem;
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow);
             transition: box-shadow 0.3s ease, transform 0.2s ease;
         }
 
         .panel:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             transform: translateY(-2px);
         }
 
         .map-section:hover {
-            transform: none; /* Keep map section stable */
+            transform: none;
+        }
+
+        .results-panel {
+            background-color: var(--card-color);
         }
 
         .controls-panel {
@@ -94,9 +105,9 @@
         }
         
         .controls-panel::-webkit-scrollbar { width: 8px; }
-        .controls-panel::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .controls-panel::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-        .controls-panel::-webkit-scrollbar-thumb:hover { background: #aaa; }
+        .controls-panel::-webkit-scrollbar-track { background: #0b1220; border-radius: 10px; }
+        .controls-panel::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        .controls-panel::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
         h1, h2 {
             margin-top: 0;
@@ -116,8 +127,13 @@
             padding: 1rem;
             font-weight: 600;
             cursor: pointer;
-            background-color: #f8f9fa;
+            background-color: #0c1426;
             list-style-position: inside;
+            color: var(--text-color);
+            transition: background-color 0.2s;
+        }
+        summary:hover {
+            background-color: #131b2e;
         }
         details[open] summary { border-bottom: 1px solid var(--border-color); }
         .details-content {
@@ -128,27 +144,49 @@
         }
 
         .form-group { display: flex; flex-direction: column; }
-        .slider-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        .slider-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500; }
-        .slider-label .value { font-weight: 600; color: var(--primary-color); }
+        .form-group label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 500; }
+        .slider-group { 
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .slider-label { 
+            font-size: 0.9rem; 
+            font-weight: 500;
+            grid-column: 1 / -1;
+            color: var(--text-muted);
+        }
+        .slider-container {
+            grid-column: 1;
+        }
+        .number-input {
+            grid-column: 2;
+            width: 100%;
+        }
 
-        input[type="text"], input[type="password"] {
-            background-color: #fff;
+        input[type="text"], input[type="password"], input[type="number"], select {
+            background-color: #0c1426;
             color: var(--text-color);
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            padding: 0.75rem;
-            font-size: 1rem;
-            width: 100%;
+            padding: 0.5rem;
+            font-size: 0.9rem;
             box-sizing: border-box;
         }
-        input:focus {
+        input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+        input:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3);
         }
-        input:disabled {
-            background-color: #e9ecef;
+        input:disabled, select:disabled {
+            background-color: #0b1220;
+            opacity: 0.6;
         }
 
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
@@ -156,13 +194,24 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: var(--primary-color); border-radius: 3px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--surface-color); border: 3px solid var(--primary-color); cursor: pointer; margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
-        button { padding: 0.8rem 1.5rem; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        #startButton { background-color: var(--primary-color); color: white; }
-        #startButton:hover { background-color: var(--primary-hover-color); }
-        #stopButton { background-color: var(--secondary-color); color: white; }
-        #stopButton:not(:disabled):hover { background-color: #5a6268; }
-        button:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; }
+        .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1.5rem; }
+        .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+        button { padding: 0.8rem 1rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        #startButton { 
+            background: linear-gradient(90deg, #06b6d4, #22d3ee);
+            color: #05202a;
+            border: none;
+        }
+        #startButton:hover:not(:disabled) { 
+            background: linear-gradient(90deg, #0891b2, #06b6d4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 211, 238, 0.4);
+        }
+        #stopButton { background-color: var(--secondary-color); color: var(--text-color); }
+        #stopButton:not(:disabled):hover { background-color: #4b5563; }
+        .secondary-btn { background-color: #0c1426; color: var(--text-color); border: 1px solid var(--border-color); }
+        .secondary-btn:hover:not(:disabled) { background-color: #131b2e; border-color: var(--primary-color); }
+        button:disabled { background-color: #0b1220; color: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
         
         .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         #status { font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
@@ -175,8 +224,9 @@
         
         .results-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         .results-table th, .results-table td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border-color); }
-        .results-table th { font-weight: 600; background-color: #f8f9fa; }
-        .results-table tbody tr:first-child { background-color: rgba(0, 123, 255, 0.05); font-weight: 500; }
+        .results-table th { font-weight: 600; background-color: #0c1426; color: var(--text-muted); }
+        .results-table tbody tr:first-child { background-color: rgba(34, 211, 238, 0.1); font-weight: 500; }
+        .results-table tbody tr:hover { background-color: rgba(34, 211, 238, 0.05); }
 
         #map { 
             height: 60vh;
@@ -197,6 +247,7 @@
             text-align: center;
             padding-bottom: 0.5rem;
             border-bottom: 2px solid var(--primary-color);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
         
         .map-container {
@@ -206,7 +257,7 @@
         
         .map-info-panel {
             position: absolute;
-            top: 10px;
+            top: 180px;
             right: 10px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -243,14 +294,14 @@
         .coord-display { 
             display: flex; 
             justify-content: space-around; 
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: linear-gradient(135deg, #0c1426 0%, #0b1220 100%);
             padding: 1rem; 
             border-radius: 8px; 
             border: 1px solid var(--border-color);
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
             margin-top: 1rem;
         }
-        .coord-display span { font-size: 0.9rem; }
+        .coord-display span { font-size: 0.9rem; color: var(--text-muted); }
         .coord-display strong { color: var(--primary-color); font-weight: 600; }
         
         .map-legend {
@@ -288,26 +339,59 @@
             border: 1px solid rgba(0, 0, 0, 0.2);
         }
 
-        .toggle-group { display: flex; align-items: center; justify-content: space-between; background-color: #f0f3f5; padding: 0.75rem 1rem; border-radius: 6px; margin-top: 1rem; }
-        .toggle-group label { font-weight: 500; }
-        .toggle-switch { position: relative; width: 50px; height: 26px; -webkit-appearance: none; appearance: none; background: #ccc; outline: none; border-radius: 20px; transition: background-color 0.3s; cursor: pointer; }
-        .toggle-switch:checked { background-color: var(--success-color); }
-        .toggle-switch::before { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 50%; top: 2px; left: 2px; background: white; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-group { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background-color: #0c1426; 
+            padding: 0.75rem 1rem; 
+            border-radius: 8px; 
+            margin-top: 1rem; 
+            border: 1px solid var(--border-color);
+        }
+        .toggle-group label { font-weight: 500; color: var(--text-color); }
+        .toggle-switch { 
+            position: relative; 
+            width: 50px; 
+            height: 26px; 
+            -webkit-appearance: none; 
+            appearance: none; 
+            background: #374151; 
+            outline: none; 
+            border-radius: 20px; 
+            transition: background-color 0.3s; 
+            cursor: pointer; 
+        }
+        .toggle-switch:checked { background-color: var(--primary-color); }
+        .toggle-switch::before { 
+            content: ''; 
+            position: absolute; 
+            width: 22px; 
+            height: 22px; 
+            border-radius: 50%; 
+            top: 2px; 
+            left: 2px; 
+            background: var(--surface-color); 
+            transition: 0.3s; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4); 
+        }
         .toggle-switch:checked::before { left: 26px; }
 
         .progress-bar-container {
             width: 100%;
-            background-color: #e9ecef;
+            background-color: #0c1426;
             border-radius: 6px;
             margin-top: 1rem;
             overflow: hidden;
             height: 10px;
+            border: 1px solid var(--border-color);
         }
         .progress-bar {
             width: 0%;
             height: 100%;
-            background-color: var(--success-color);
+            background: linear-gradient(90deg, #06b6d4, #22d3ee);
             transition: width 0.1s linear;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
         }
 
         @media (max-width: 1200px) {
@@ -367,13 +451,15 @@
                         <input type="checkbox" id="manualModeToggle" class="toggle-switch">
                     </div>
                     <div class="slider-group" id="manualRainGroup" style="display: none;">
-                        <label class="slider-label" for="manualRainfall">Intensity (in/hr) <span class="value" id="manualRainfall-value">0.0</span></label>
-                        <input type="range" id="manualRainfall" min="0" max="5" value="0.0" step="0.1">
+                        <label class="slider-label" for="manualRainfall">Intensity (in/hr)</label>
+                        <input type="range" class="slider-container" id="manualRainfall" min="0" max="5" value="0.0" step="0.1">
+                        <input type="number" class="number-input" id="manualRainfall_num" min="0" max="5" value="0.0" step="0.1">
                     </div>
 
                     <div class="slider-group">
-                        <label class="slider-label" for="timeStep">Time Step (s) <span class="value" id="timeStep-value">60</span></label>
-                        <input type="range" id="timeStep" min="5" max="300" value="60" step="5">
+                        <label class="slider-label" for="timeStep">Time Step (s)</label>
+                        <input type="range" class="slider-container" id="timeStep" min="5" max="300" value="60" step="5">
+                        <input type="number" class="number-input" id="timeStep_num" min="5" max="300" value="60" step="5">
                     </div>
                 </div>
             </details>
@@ -382,63 +468,66 @@
                 <summary>Watershed Parameters</summary>
                 <div class="details-content">
                     <div class="slider-group">
-                        <label class="slider-label" for="area_acres">Area (acres) <span class="value" id="area_acres-value">20.0</span></label>
-                        <input type="range" id="area_acres" min="1" max="500" value="20.0" step="1">
+                        <label class="slider-label" for="area_acres">Area (acres)</label>
+                        <input type="range" class="slider-container" id="area_acres" min="1" max="500" value="20.0" step="1">
+                        <input type="number" class="number-input" id="area_acres_num" min="1" max="500" value="20.0" step="1">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="width_ft">Width (ft) <span class="value" id="width_ft-value">700</span></label>
-                        <input type="range" id="width_ft" min="50" max="2000" value="700" step="10">
+                        <label class="slider-label" for="width_ft">Width (ft)</label>
+                        <input type="range" class="slider-container" id="width_ft" min="50" max="2000" value="700" step="10">
+                        <input type="number" class="number-input" id="width_ft_num" min="50" max="2000" value="700" step="10">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="slope_pct">Slope (%) <span class="value" id="slope_pct-value">1.0</span></label>
-                        <input type="range" id="slope_pct" min="0.1" max="10" value="1.0" step="0.1">
+                        <label class="slider-label" for="slope_pct">Slope (%)</label>
+                        <input type="range" class="slider-container" id="slope_pct" min="0.1" max="10" value="1.0" step="0.1">
+                        <input type="number" class="number-input" id="slope_pct_num" min="0.1" max="10" value="1.0" step="0.1">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="imperv_pct">Imperviousness (%) <span class="value" id="imperv_pct-value">60</span></label>
-                        <input type="range" id="imperv_pct" min="0" max="100" value="60" step="1">
+                        <label class="slider-label" for="imperv_pct">Imperviousness (%)</label>
+                        <input type="range" class="slider-container" id="imperv_pct" min="0" max="100" value="60" step="1">
+                        <input type="number" class="number-input" id="imperv_pct_num" min="0" max="100" value="60" step="1">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="n_imperv">Manning's n (Imperv.) <span class="value" id="n_imperv-value">0.015</span></label>
-                        <input type="range" id="n_imperv" min="0.01" max="0.05" value="0.015" step="0.001">
+                        <label class="slider-label" for="n_imperv">Manning's n (Imperv.)</label>
+                        <input type="range" class="slider-container" id="n_imperv" min="0.01" max="0.05" value="0.015" step="0.001">
+                        <input type="number" class="number-input" id="n_imperv_num" min="0.01" max="0.05" value="0.015" step="0.001">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="n_perv">Manning's n (Perv.) <span class="value" id="n_perv-value">0.15</span></label>
-                        <input type="range" id="n_perv" min="0.05" max="0.4" value="0.15" step="0.01">
+                        <label class="slider-label" for="n_perv">Manning's n (Perv.)</label>
+                        <input type="range" class="slider-container" id="n_perv" min="0.05" max="0.4" value="0.15" step="0.01">
+                        <input type="number" class="number-input" id="n_perv_num" min="0.05" max="0.4" value="0.15" step="0.01">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="dstore_imperv_in">Dep. Storage (Imperv, in) <span class="value" id="dstore_imperv_in-value">0.06</span></label>
-                        <input type="range" id="dstore_imperv_in" min="0" max="0.2" value="0.06" step="0.01">
+                        <label class="slider-label" for="dstore_imperv_in">Dep. Storage (Imperv, in)</label>
+                        <input type="range" class="slider-container" id="dstore_imperv_in" min="0" max="0.2" value="0.06" step="0.01">
+                        <input type="number" class="number-input" id="dstore_imperv_in_num" min="0" max="0.2" value="0.06" step="0.01">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="dstore_perv_in">Dep. Storage (Perv, in) <span class="value" id="dstore_perv_in-value">0.12</span></label>
-                        <input type="range" id="dstore_perv_in" min="0" max="0.5" value="0.12" step="0.01">
+                        <label class="slider-label" for="dstore_perv_in">Dep. Storage (Perv, in)</label>
+                        <input type="range" class="slider-container" id="dstore_perv_in" min="0" max="0.5" value="0.12" step="0.01">
+                        <input type="number" class="number-input" id="dstore_perv_in_num" min="0" max="0.5" value="0.12" step="0.01">
                     </div>
                     <div class="slider-group">
-                        <label class="slider-label" for="zero_imperv_pct">% Imperv w/o Storage <span class="value" id="zero_imperv_pct-value">25</span></label>
-                        <input type="range" id="zero_imperv_pct" min="0" max="100" value="25" step="1">
+                        <label class="slider-label" for="zero_imperv_pct">% Imperv w/o Storage</label>
+                        <input type="range" class="slider-container" id="zero_imperv_pct" min="0" max="100" value="25" step="1">
+                        <input type="number" class="number-input" id="zero_imperv_pct_num" min="0" max="100" value="25" step="1">
                     </div>
                 </div>
             </details>
 
             <details>
-                <summary>Horton Infiltration</summary>
+                <summary>Infiltration Method</summary>
                 <div class="details-content">
-                    <div class="slider-group">
-                        <label class="slider-label" for="infil_max_rate_in_hr">Max Rate (in/hr) <span class="value" id="infil_max_rate_in_hr-value">2.0</span></label>
-                        <input type="range" id="infil_max_rate_in_hr" min="0.1" max="10" value="2.0" step="0.1">
+                    <div class="form-group">
+                        <label for="infiltration">Method</label>
+                        <select id="infiltration">
+                            <option value="horton">Horton</option>
+                            <option value="green_ampt">Green-Ampt</option>
+                            <option value="curve_number">Curve Number</option>
+                            <option value="none">None</option>
+                        </select>
                     </div>
-                    <div class="slider-group">
-                        <label class="slider-label" for="infil_min_rate_in_hr">Min Rate (in/hr) <span class="value" id="infil_min_rate_in_hr-value">0.2</span></label>
-                        <input type="range" id="infil_min_rate_in_hr" min="0.01" max="1" value="0.2" step="0.01">
-                    </div>
-                    <div class="slider-group">
-                        <label class="slider-label" for="infil_decay">Decay Constant (1/hr) <span class="value" id="infil_decay-value">4.0</span></label>
-                        <input type="range" id="infil_decay" min="0.1" max="10" value="4.0" step="0.1">
-                    </div>
-                    <div class="slider-group">
-                        <label class="slider-label" for="infil_dry_time_days">Soil Dry Time (days) <span class="value" id="infil_dry_time_days-value">7.0</span></label>
-                        <input type="range" id="infil_dry_time_days" min="1" max="30" value="7.0" step="0.5">
-                    </div>
+                    <div id="infil-params"></div>
                 </div>
             </details>
         </form>
@@ -446,6 +535,10 @@
         <div class="button-group">
             <button id="startButton">Start Simulation</button>
             <button id="stopButton" disabled>Stop Simulation</button>
+        </div>
+        <div class="button-row">
+            <button id="exportCSV" class="secondary-btn">Export CSV</button>
+            <button id="presetBtn" class="secondary-btn">Urban Preset</button>
         </div>
         <div class="progress-bar-container" id="progressContainer" style="display: none;">
             <div id="progressBar" class="progress-bar"></div>
@@ -538,31 +631,211 @@ const MANNING_EXP = 1.6666667;
 const ODE_TOL = 0.0001;
 const SEC_PER_HOUR = 3600.0;
 
-// --- SWMM Core Logic ---
+// --- Infiltration Models from NEA Demo ---
+class Horton {
+    constructor(f0, fc, kd, kr) {
+        this.f0 = f0;
+        this.fc = fc;
+        this.kd = kd;
+        this.kr = kr;
+        this.fcap = f0;
+    }
+    step(supply_in, dt_hr, isWet) {
+        if (isWet) {
+            this.fcap = this.fc + (this.fcap - this.fc) * Math.exp(-this.kd * dt_hr);
+        } else if (this.kr > 0) {
+            this.fcap = this.f0 - (this.f0 - this.fcap) * Math.exp(-this.kr * dt_hr);
+        }
+        const cap = Math.max(0, this.fcap) * dt_hr;
+        return Math.min(supply_in, cap);
+    }
+}
+
+class GreenAmpt {
+    constructor(Ks, psi, imd) {
+        this.Ks = Ks;
+        this.psi = psi;
+        this.imd = imd;
+        this.F = 1e-6;
+    }
+    step(supply_in, dt_hr, head_in) {
+        if (supply_in <= 0) return 0;
+        const H = Math.max(0, head_in);
+        const f1 = this.Ks * (1 + (this.psi * this.imd + H) / this.F);
+        const i1 = Math.min(supply_in, f1 * dt_hr);
+        const F1 = this.F + i1;
+        const f2 = this.Ks * (1 + (this.psi * this.imd + H) / Math.max(1e-6, F1));
+        const i2 = Math.min(supply_in, f2 * dt_hr);
+        const infil = Math.min(supply_in, 0.5 * (i1 + i2));
+        this.F += Math.max(0, infil);
+        return Math.max(0, infil);
+    }
+}
+
+class CurveNumber {
+    constructor(CN, lambda) {
+        this.CN = CN;
+        this.lambda = lambda;
+        this.P = 0;
+        this.Q = 0;
+    }
+    step(rain_in) {
+        const S_in = Math.max(0, 1000 / Math.max(1e-6, this.CN) - 10);
+        const Ia = this.lambda * S_in;
+        const P1 = this.P + rain_in;
+        if (P1 <= Ia) {
+            this.P = P1;
+            return { runoff: 0, infil: rain_in };
+        }
+        const Q1 = ((P1 - Ia) * (P1 - Ia)) / (P1 - Ia + S_in);
+        const runoff = Math.max(0, Q1 - this.Q);
+        this.P = P1;
+        this.Q = Q1;
+        return { runoff, infil: Math.max(0, rain_in - runoff) };
+    }
+}
+
+// --- Enhanced SWMM Core Logic ---
 class Subcatchment {
-    constructor(name, params) { this.name = name; this.area_acres = params.area_acres; this.width_ft = params.width_ft; this.slope_pct = params.slope_pct; this.imperv_pct = params.imperv_pct; this.n_imperv = params.n_imperv; this.n_perv = params.n_perv; this.dstore_imperv_in = params.dstore_imperv_in; this.dstore_perv_in = params.dstore_perv_in; this.zero_imperv_pct = params.zero_imperv_pct; this.infil_max_rate_in_hr = params.infil_max_rate_in_hr; this.infil_min_rate_in_hr = params.infil_min_rate_in_hr; this.infil_decay = params.infil_decay; this.infil_dry_time_days = params.infil_dry_time_days; this.area_ft2 = this.area_acres * 43560.0; this.slope = this.slope_pct / 100.0; const frac_imperv = this.imperv_pct / 100.0; const frac_zero_imperv = this.zero_imperv_pct / 100.0; this.imperv_area_1 = this.area_ft2 * frac_imperv * frac_zero_imperv; this.imperv_area_2 = this.area_ft2 * frac_imperv * (1.0 - frac_zero_imperv); this.perv_area = this.area_ft2 * (1.0 - frac_imperv); this.dstore_imperv = this.dstore_imperv_in / 12.0; this.dstore_perv = this.dstore_perv_in / 12.0; this.alpha_imperv = this._calculate_alpha(this.n_imperv, this.imperv_area_1 + this.imperv_area_2); this.alpha_perv = this._calculate_alpha(this.n_perv, this.perv_area); this.infil_f0 = this.infil_max_rate_in_hr / SEC_PER_HOUR / 12.0; this.infil_fmin = this.infil_min_rate_in_hr / SEC_PER_HOUR / 12.0; this.infil_decay_rate = this.infil_decay / SEC_PER_HOUR; this.infil_regen_rate = 1.0 / (this.infil_dry_time_days * 24 * SEC_PER_HOUR); this.depth_imperv_1 = 0.0; this.depth_imperv_2 = 0.0; this.depth_perv = 0.0; this.infil_f = this.infil_f0; this.ode_context = {}; }
-    _calculate_alpha(n, sub_area_ft2) { if (sub_area_ft2 <= 0 || n <= 0) return 0; return MANNING_COEFF * this.width_ft * Math.sqrt(this.slope) / (n * sub_area_ft2); }
+    constructor(name, params) {
+        this.name = name;
+        this.area_acres = params.area_acres;
+        this.width_ft = params.width_ft;
+        this.slope_pct = params.slope_pct;
+        this.imperv_pct = params.imperv_pct;
+        this.n_imperv = params.n_imperv;
+        this.n_perv = params.n_perv;
+        this.dstore_imperv_in = params.dstore_imperv_in;
+        this.dstore_perv_in = params.dstore_perv_in;
+        this.zero_imperv_pct = params.zero_imperv_pct;
+        this.infiltration = params.infiltration || 'horton';
+
+        // Area calculations
+        this.area_ft2 = this.area_acres * 43560.0;
+        this.slope = this.slope_pct / 100.0;
+        const frac_imperv = this.imperv_pct / 100.0;
+        const frac_zero_imperv = this.zero_imperv_pct / 100.0;
+        this.imperv_area_1 = this.area_ft2 * frac_imperv * frac_zero_imperv;
+        this.imperv_area_2 = this.area_ft2 * frac_imperv * (1.0 - frac_zero_imperv);
+        this.perv_area = this.area_ft2 * (1.0 - frac_imperv);
+
+        // Storage
+        this.dstore_imperv = this.dstore_imperv_in / 12.0;
+        this.dstore_perv = this.dstore_perv_in / 12.0;
+
+        // Manning's routing
+        this.alpha_imperv = this._calculate_alpha(this.n_imperv, this.imperv_area_1 + this.imperv_area_2);
+        this.alpha_perv = this._calculate_alpha(this.n_perv, this.perv_area);
+
+        // Initialize infiltration models
+        if (this.infiltration === 'horton') {
+            const f0 = params.infil_max_rate_in_hr || 2.0;
+            const fc = params.infil_min_rate_in_hr || 0.2;
+            const kd = params.infil_decay || 4.0;
+            const kr = 1.0 / ((params.infil_dry_time_days || 7.0) * 24);
+            this.horton = new Horton(f0, fc, kd, kr);
+        } else if (this.infiltration === 'green_ampt') {
+            const Ks = params.ga_Ks || 0.5; // in/hr
+            const psi = params.ga_psi || 4.5; // inches
+            const imd = params.ga_imd || 0.3;
+            this.greenAmpt = new GreenAmpt(Ks, psi, imd);
+        } else if (this.infiltration === 'curve_number') {
+            const CN = params.cn_CN || 75;
+            const lambda = params.cn_lambda || 0.2;
+            this.curveNumber = new CurveNumber(CN, lambda);
+        }
+
+        // State variables
+        this.depth_imperv_1 = 0.0;
+        this.depth_imperv_2 = 0.0;
+        this.depth_perv = 0.0;
+        this.ode_context = {};
+    }
+
+    _calculate_alpha(n, sub_area_ft2) {
+        if (sub_area_ft2 <= 0 || n <= 0) return 0;
+        return MANNING_COEFF * this.width_ft * Math.sqrt(this.slope) / (n * sub_area_ft2);
+    }
+
     get_runoff(rainfall_rate_in_hr, t_step_sec) {
         const rainfall_rate_ft_sec = rainfall_rate_in_hr / 12.0 / SEC_PER_HOUR;
-        const [runoff_imperv_1, new_depth_imperv_1] = this._get_subarea_runoff(this.depth_imperv_1, rainfall_rate_ft_sec, 0, this.alpha_imperv, t_step_sec);
+        const dt_hr = t_step_sec / SEC_PER_HOUR;
+        const rain_depth_in = rainfall_rate_in_hr * dt_hr;
+
+        // Impervious routing (no infiltration)
+        const [runoff_imperv_1, new_depth_imperv_1] = this._get_subarea_runoff(
+            this.depth_imperv_1, rainfall_rate_ft_sec, 0, this.alpha_imperv, t_step_sec
+        );
         this.depth_imperv_1 = new_depth_imperv_1;
-        const [runoff_imperv_2, new_depth_imperv_2] = this._get_subarea_runoff(this.depth_imperv_2, rainfall_rate_ft_sec, this.dstore_imperv, this.alpha_imperv, t_step_sec);
+
+        const [runoff_imperv_2, new_depth_imperv_2] = this._get_subarea_runoff(
+            this.depth_imperv_2, rainfall_rate_ft_sec, this.dstore_imperv, this.alpha_imperv, t_step_sec
+        );
         this.depth_imperv_2 = new_depth_imperv_2;
-        if (rainfall_rate_ft_sec > 0) { this.infil_f -= this.infil_decay_rate * (this.infil_f - this.infil_fmin) * t_step_sec; } else { this.infil_f += this.infil_regen_rate * (this.infil_f0 - this.infil_f) * t_step_sec; }
-        this.infil_f = Math.max(this.infil_f, this.infil_fmin);
-        this.infil_f = Math.min(this.infil_f, this.infil_f0);
-        const available_water_rate = this.depth_perv / t_step_sec + rainfall_rate_ft_sec;
-        const infiltration_rate = Math.min(this.infil_f, available_water_rate);
-        const net_rainfall_perv = rainfall_rate_ft_sec - infiltration_rate;
-        const [runoff_perv, new_depth_perv] = this._get_subarea_runoff(this.depth_perv, net_rainfall_perv, this.dstore_perv, this.alpha_perv, t_step_sec);
+
+        // Pervious area with infiltration
+        let infiltration_rate_ft_sec = 0;
+        let net_rainfall_perv = rainfall_rate_ft_sec;
+
+        if (this.infiltration === 'horton' && this.horton) {
+            const isWet = rainfall_rate_in_hr > 0 || this.depth_perv > 0;
+            const pervDepth_in = this.depth_perv * 12.0;
+            const supply_in = rain_depth_in + pervDepth_in;
+            const infil_in = this.horton.step(supply_in, dt_hr, isWet);
+            infiltration_rate_ft_sec = (infil_in / 12.0) / dt_hr / SEC_PER_HOUR;
+            net_rainfall_perv = Math.max(0, rainfall_rate_ft_sec - infiltration_rate_ft_sec);
+        } else if (this.infiltration === 'green_ampt' && this.greenAmpt) {
+            const pervDepth_in = this.depth_perv * 12.0;
+            const supply_in = rain_depth_in + pervDepth_in;
+            const infil_in = this.greenAmpt.step(supply_in, dt_hr, pervDepth_in);
+            infiltration_rate_ft_sec = (infil_in / 12.0) / dt_hr / SEC_PER_HOUR;
+            net_rainfall_perv = Math.max(0, rainfall_rate_ft_sec - infiltration_rate_ft_sec);
+        } else if (this.infiltration === 'curve_number' && this.curveNumber) {
+            const result = this.curveNumber.step(rain_depth_in);
+            infiltration_rate_ft_sec = (result.infil / 12.0) / dt_hr / SEC_PER_HOUR;
+            net_rainfall_perv = (result.runoff / 12.0) / dt_hr / SEC_PER_HOUR;
+        } else {
+            // No infiltration
+            net_rainfall_perv = rainfall_rate_ft_sec;
+        }
+
+        const [runoff_perv, new_depth_perv] = this._get_subarea_runoff(
+            this.depth_perv, net_rainfall_perv, this.dstore_perv, this.alpha_perv, t_step_sec
+        );
         this.depth_perv = new_depth_perv;
-        const total_runoff = (runoff_imperv_1 * this.imperv_area_1 + runoff_imperv_2 * this.imperv_area_2 + runoff_perv * this.perv_area);
+
+        const total_runoff = (runoff_imperv_1 * this.imperv_area_1 + 
+                             runoff_imperv_2 * this.imperv_area_2 + 
+                             runoff_perv * this.perv_area);
         return total_runoff;
     }
-    _get_subarea_runoff(d_initial, inflow_rate, d_store, alpha, t_step) { this.ode_context = { inflow_rate, d_store, alpha }; const y_start = [d_initial]; this._odesolve_integrate(y_start, 1, 0, t_step, ODE_TOL, t_step, this._get_dd_dt.bind(this)); const d_final = y_start[0]; const d_excess = d_final - d_store; let runoff_rate = 0.0; if (d_excess > 0 && alpha > 0) { runoff_rate = alpha * (d_excess ** MANNING_EXP); } return [runoff_rate, d_final]; }
-    _get_dd_dt(t, y) { const context = this.ode_context; const depth = y[0]; const d_excess = depth - context.d_store; let outflow = 0; if (d_excess > 0 && context.alpha > 0) { outflow = context.alpha * (d_excess ** MANNING_EXP); } return [context.inflow_rate - outflow]; }
+
+    _get_subarea_runoff(d_initial, inflow_rate, d_store, alpha, t_step) {
+        this.ode_context = { inflow_rate, d_store, alpha };
+        const y_start = [d_initial];
+        this._odesolve_integrate(y_start, 1, 0, t_step, ODE_TOL, t_step, this._get_dd_dt.bind(this));
+        const d_final = y_start[0];
+        const d_excess = d_final - d_store;
+        let runoff_rate = 0.0;
+        if (d_excess > 0 && alpha > 0) {
+            runoff_rate = alpha * (d_excess ** MANNING_EXP);
+        }
+        return [runoff_rate, d_final];
+    }
+
+    _get_dd_dt(t, y) {
+        const context = this.ode_context;
+        const depth = y[0];
+        const d_excess = depth - context.d_store;
+        let outflow = 0;
+        if (d_excess > 0 && context.alpha > 0) {
+            outflow = context.alpha * (d_excess ** MANNING_EXP);
+        }
+        return [context.inflow_rate - outflow];
+    }
+
     _odesolve_integrate(y_start, n, x1, x2, eps, h1, derivs) {
-        const MAXSTP = 10000, TINY = 1.0e-30, SAFETY = 0.9, PGROW = -0.2, PSHRNK = -0.25, ERRCON = (5.0 / SAFETY)**(1.0 / PGROW);
+        const MAXSTP = 10000, TINY = 1.0e-30, SAFETY = 0.9, PGROW = -0.2, PSHRNK = -0.25, ERRCON = (5.0 / SAFETY) ** (1.0 / PGROW);
         let x = x1, h = h1, y = [...y_start];
         let errmax = 0.0;
         let y_temp = [];
@@ -571,7 +844,7 @@ class Subcatchment {
             const dydx = derivs(x, y);
             const yscal = y.map((val, i) => Math.abs(val) + Math.abs(dydx[i] * h) + TINY);
             if ((x + h - x2) * (x + h - x1) > 0.0) h = x2 - x;
-            
+
             while (true) {
                 const [y_err, y_temp_inner] = this._rkck(y, dydx, n, x, h, derivs);
                 y_temp = y_temp_inner;
@@ -588,12 +861,12 @@ class Subcatchment {
                 h = h > 0 ? Math.max(h_temp, 0.1 * h) : Math.min(h_temp, 0.1 * h);
                 if (x + h === x) throw new Error("ODE solver step size underflow");
             }
-            
+
             let h_next = (errmax > ERRCON) ? SAFETY * h * (errmax ** PGROW) : 5.0 * h;
             x += h;
             y = y_temp;
             h = h_next;
-            
+
             if ((x - x2) * (x2 - x1) >= 0.0) {
                 y_start.forEach((_, i) => y_start[i] = y[i]);
                 return;
@@ -601,39 +874,56 @@ class Subcatchment {
         }
         throw new Error("Exceeded max steps in ODE solver");
     }
-    _rkck(y, dydx, n, x, h, derivs) { const A = [0.0, 0.2, 0.3, 0.6, 1.0, 0.875]; const B = [[], [0.2], [3/40, 9/40], [0.3, -0.9, 1.2], [-11/54, 2.5, -70/27, 35/27], [1631/55296, 175/512, 575/13824, 44275/110592, 253/4096]]; const C = [37/378, 0, 250/621, 125/594, 0, 512/1771]; const DC = [C[0]-2825/27648, 0, C[2]-18575/48384, C[3]-13525/55296, -277/14336, C[5]-0.25]; const k = Array(6).fill(0).map(() => Array(n).fill(0)); k[0] = [...dydx]; for (let i = 1; i < 6; i++) { const xtemp = x + A[i] * h; const ytemp = y.map((val, j) => val + h * B[i].reduce((s, b, m) => s + b * k[m][j], 0)); k[i] = derivs(xtemp, ytemp); } const y_out = Array(n).fill(0), y_err = Array(n).fill(0); for (let i = 0; i < n; i++) { y_out[i] = y[i] + h * C.reduce((s, c, j) => s + c * k[j][i], 0); y_err[i] = h * DC.reduce((s, dc, j) => s + dc * k[j][i], 0); } return [y_err, y_out]; }
+
+    _rkck(y, dydx, n, x, h, derivs) {
+        const A = [0.0, 0.2, 0.3, 0.6, 1.0, 0.875];
+        const B = [[], [0.2], [3 / 40, 9 / 40], [0.3, -0.9, 1.2], [-11 / 54, 2.5, -70 / 27, 35 / 27], [1631 / 55296, 175 / 512, 575 / 13824, 44275 / 110592, 253 / 4096]];
+        const C = [37 / 378, 0, 250 / 621, 125 / 594, 0, 512 / 1771];
+        const DC = [C[0] - 2825 / 27648, 0, C[2] - 18575 / 48384, C[3] - 13525 / 55296, -277 / 14336, C[5] - 0.25];
+        const k = Array(6).fill(0).map(() => Array(n).fill(0));
+        k[0] = [...dydx];
+        for (let i = 1; i < 6; i++) {
+            const xtemp = x + A[i] * h;
+            const ytemp = y.map((val, j) => val + h * B[i].reduce((s, b, m) => s + b * k[m][j], 0));
+            k[i] = derivs(xtemp, ytemp);
+        }
+        const y_out = Array(n).fill(0), y_err = Array(n).fill(0);
+        for (let i = 0; i < n; i++) {
+            y_out[i] = y[i] + h * C.reduce((s, c, j) => s + c * k[j][i], 0);
+            y_err[i] = h * DC.reduce((s, dc, j) => s + dc * k[j][i], 0);
+        }
+        return [y_err, y_out];
+    }
 }
 
 // --- Weather API (Enhanced) ---
-async function getWeatherData(apiKey, lat, lon) { 
-    try { 
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`); 
-        if (!response.ok) { 
-            const errorData = await response.json(); 
-            throw new Error(`API Error: ${errorData.message || 'Unknown error'}`); 
-        } 
-        const data = await response.json(); 
-        const precip_mm_hr = (data.rain && data.rain['1h']) ? data.rain['1h'] : 0.0; 
+async function getWeatherData(apiKey, lat, lon) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`API Error: ${errorData.message || 'Unknown error'}`);
+        }
+        const data = await response.json();
+        const precip_mm_hr = (data.rain && data.rain['1h']) ? data.rain['1h'] : 0.0;
         const rainfall_in_hr = precip_mm_hr / 25.4;
         const temperature = data.main ? data.main.temp : null;
-        
+
         // Update dashboard info panel
         document.getElementById('current-rainfall').textContent = `${rainfall_in_hr.toFixed(3)} in/hr`;
         document.getElementById('temperature').textContent = temperature ? `${temperature.toFixed(1)}°F` : '-- °F';
-        
-        return rainfall_in_hr; 
-    } catch (e) { 
-        console.error("Fetch error:", e); 
-        throw e; 
-    } 
+
+        return rainfall_in_hr;
+    } catch (e) {
+        console.error("Fetch error:", e);
+        throw e;
+    }
 }
 
-// Get 6-hour precipitation forecast from NOAA (simplified approach)
+// Get 6-hour precipitation forecast
 async function getForecastData(lat, lon) {
     try {
-        // For demonstration, we'll use a mock forecast value
-        // In a real implementation, you'd parse the NOAA WPC QPF data
-        const mockForecast = Math.random() * 0.5; // 0-0.5 inches
+        const mockForecast = Math.random() * 0.5;
         document.getElementById('forecast-rainfall').textContent = `${mockForecast.toFixed(2)} in`;
         return mockForecast;
     } catch (e) {
@@ -641,6 +931,123 @@ async function getForecastData(lat, lon) {
         document.getElementById('forecast-rainfall').textContent = '-- in';
         return 0;
     }
+}
+
+// --- CSV Export ---
+let simulationData = [];
+
+function exportToCSV() {
+    if (simulationData.length === 0) {
+        alert('No data to export. Run a simulation first.');
+        return;
+    }
+
+    const headers = ['Time', 'Rainfall (in/hr)', 'Runoff (cfs)'];
+    const csvContent = [
+        headers.join(','),
+        ...simulationData.map(row => 
+            [row.time, row.rainfall.toFixed(4), row.runoff.toFixed(4)].join(',')
+        )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `swmm_runoff_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// --- Dynamic Infiltration Parameter UI ---
+function renderInfilParamUI() {
+    const infilParamsDiv = document.getElementById('infil-params');
+    const method = document.getElementById('infiltration').value;
+    let html = '';
+
+    if (method === 'horton') {
+        html = `
+            <div class="slider-group">
+                <label class="slider-label">Max Rate f₀ (in/hr)</label>
+                <input type="range" class="slider-container" id="infil_max_rate_in_hr" min="0.1" max="10" value="2.0" step="0.1">
+                <input type="number" class="number-input" id="infil_max_rate_in_hr_num" min="0.1" max="10" value="2.0" step="0.1">
+            </div>
+            <div class="slider-group">
+                <label class="slider-label">Min Rate fₖ (in/hr)</label>
+                <input type="range" class="slider-container" id="infil_min_rate_in_hr" min="0.01" max="1" value="0.2" step="0.01">
+                <input type="number" class="number-input" id="infil_min_rate_in_hr_num" min="0.01" max="1" value="0.2" step="0.01">
+            </div>
+            <div class="slider-group">
+                <label class="slider-label">Decay Constant k (1/hr)</label>
+                <input type="range" class="slider-container" id="infil_decay" min="0.1" max="10" value="4.0" step="0.1">
+                <input type="number" class="number-input" id="infil_decay_num" min="0.1" max="10" value="4.0" step="0.1">
+            </div>
+            <div class="slider-group">
+                <label class="slider-label">Dry Time (days)</label>
+                <input type="range" class="slider-container" id="infil_dry_time_days" min="1" max="30" value="7.0" step="0.5">
+                <input type="number" class="number-input" id="infil_dry_time_days_num" min="1" max="30" value="7.0" step="0.5">
+            </div>
+        `;
+    } else if (method === 'green_ampt') {
+        html = `
+            <div class="slider-group">
+                <label class="slider-label">Hydraulic Conductivity Kₛ (in/hr)</label>
+                <input type="range" class="slider-container" id="ga_Ks" min="0.01" max="5" value="0.5" step="0.01">
+                <input type="number" class="number-input" id="ga_Ks_num" min="0.01" max="5" value="0.5" step="0.01">
+            </div>
+            <div class="slider-group">
+                <label class="slider-label">Suction Head ψ (in)</label>
+                <input type="range" class="slider-container" id="ga_psi" min="0.5" max="15" value="4.5" step="0.1">
+                <input type="number" class="number-input" id="ga_psi_num" min="0.5" max="15" value="4.5" step="0.1">
+            </div>
+            <div class="slider-group">
+                <label class="slider-label">Initial Moisture Deficit</label>
+                <input type="range" class="slider-container" id="ga_imd" min="0.05" max="0.5" value="0.3" step="0.01">
+                <input type="number" class="number-input" id="ga_imd_num" min="0.05" max="0.5" value="0.3" step="0.01">
+            </div>
+        `;
+    } else if (method === 'curve_number') {
+        html = `
+            <div class="slider-group">
+                <label class="slider-label">Curve Number CN</label>
+                <input type="range" class="slider-container" id="cn_CN" min="30" max="98" value="75" step="1">
+                <input type="number" class="number-input" id="cn_CN_num" min="30" max="98" value="75" step="1">
+            </div>
+            <div class="slider-group">
+                <label class="slider-label">Initial Abstraction λ</label>
+                <input type="range" class="slider-container" id="cn_lambda" min="0.01" max="0.5" value="0.2" step="0.01">
+                <input type="number" class="number-input" id="cn_lambda_num" min="0.01" max="0.5" value="0.2" step="0.01">
+            </div>
+        `;
+    } else {
+        html = '<p style="color: #6c757d; font-size: 0.9rem; margin: 0;">No infiltration losses will be applied.</p>';
+    }
+
+    infilParamsDiv.innerHTML = html;
+    setupRangeNumberSync(infilParamsDiv);
+}
+
+// --- Sync range sliders with number inputs ---
+function setupRangeNumberSync(container) {
+    const ranges = container.querySelectorAll('input[type="range"]');
+    ranges.forEach(range => {
+        const numInput = container.querySelector(`#${range.id}_num`);
+        if (numInput) {
+            range.addEventListener('input', () => {
+                numInput.value = range.value;
+            });
+            numInput.addEventListener('input', () => {
+                const val = parseFloat(numInput.value);
+                if (Number.isFinite(val)) {
+                    const min = parseFloat(range.min);
+                    const max = parseFloat(range.max);
+                    range.value = Math.max(min, Math.min(max, val));
+                }
+            });
+        }
+    });
 }
 
 // --- Application UI Logic ---
@@ -659,7 +1066,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const manualRainfallSlider = document.getElementById('manualRainfall');
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
-    
+    const exportCSVBtn = document.getElementById('exportCSV');
+    const presetBtn = document.getElementById('presetBtn');
+
     let simulationInterval = null;
     let progressInterval = null;
     let my_catchment = null;
@@ -668,28 +1077,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let marker = null;
     let selectedCoords = { lat: 39.8283, lng: -98.5795 };
     let stepStartTime = 0;
-    let config = {}; // Moved config to a higher scope
+    let config = {};
 
-    // --- Slider value display logic ---
-    form.querySelectorAll('input[type="range"]').forEach(slider => {
-        const valueSpan = document.getElementById(`${slider.id}-value`);
-        if (valueSpan) {
-            slider.addEventListener('input', () => {
-                const step = parseFloat(slider.step);
-                valueSpan.textContent = (step < 1) ? parseFloat(slider.value).toFixed(step.toString().split('.')[1].length) : slider.value;
-                
-                // Update info panel for manual rainfall
-                if (slider.id === 'manualRainfall' && manualModeToggle.checked) {
-                    document.getElementById('current-rainfall').textContent = `${parseFloat(slider.value).toFixed(3)} in/hr`;
-                }
-            });
-        }
-    });
-    
+    // Initialize infiltration UI
+    renderInfilParamUI();
+    document.getElementById('infiltration').addEventListener('change', renderInfilParamUI);
+
+    // --- Slider and number input sync for all inputs ---
+    function setupAllInputSync() {
+        const allRanges = form.querySelectorAll('input[type="range"]');
+        allRanges.forEach(range => {
+            const numInput = document.getElementById(`${range.id}_num`);
+            if (numInput) {
+                range.addEventListener('input', () => {
+                    numInput.value = range.value;
+                });
+                numInput.addEventListener('input', () => {
+                    const val = parseFloat(numInput.value);
+                    if (Number.isFinite(val)) {
+                        const min = parseFloat(range.min);
+                        const max = parseFloat(range.max);
+                        range.value = Math.max(min, Math.min(max, val));
+                    }
+                });
+            }
+        });
+    }
+    setupAllInputSync();
+
     // --- Manual Mode Toggle Logic ---
     manualModeToggle.addEventListener('change', () => {
         if (manualModeToggle.checked) {
-            manualRainGroup.style.display = 'flex';
+            manualRainGroup.style.display = 'grid';
             apiKeyInput.disabled = true;
             apiKeyInput.placeholder = 'Disabled in Manual Mode';
         } else {
@@ -703,131 +1122,91 @@ document.addEventListener('DOMContentLoaded', () => {
     function initializeMap() {
         if (map) map.remove();
 
-        // Define multiple base map layers
         const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
 
         const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution: 'Tiles &copy; Esri'
         });
 
         const topoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanorams.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+            attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM'
         });
 
-        // Weather radar overlay
         const weatherRadar = L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
-            attribution: 'Weather data &copy; <a href="https://mesonet.agron.iastate.edu/">Iowa State University</a>',
+            attribution: 'Weather data &copy; Iowa State University',
             opacity: 0.6
         });
 
-        // NOAA precipitation forecast layers (using ArcGIS services)
         let noaaPrecipForecast;
         try {
-            // 6-hour quantitative precipitation forecast
             noaaPrecipForecast = L.esri.dynamicMapLayer({
                 url: 'https://mapservices.weather.noaa.gov/vector/rest/services/precip/wpc_qpf/MapServer',
                 opacity: 0.7,
-                attribution: 'Precipitation forecast &copy; <a href="https://www.weather.gov/">NOAA/NWS</a>'
+                attribution: 'Precipitation forecast &copy; NOAA/NWS'
             });
         } catch (e) {
-            console.warn('NOAA precipitation layer not available:', e);
-            // Fallback to alternative precipitation layer
             noaaPrecipForecast = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=demo', {
-                attribution: 'Precipitation &copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>',
+                attribution: 'Precipitation &copy; OpenWeatherMap',
                 opacity: 0.6
             });
         }
 
-        // Temperature overlay
-        const temperatureOverlay = L.tileLayer('https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=demo', {
-            attribution: 'Temperature &copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>',
-            opacity: 0.5
-        });
-
-        // Define base maps
         const baseMaps = {
             "🗺️ Street Map": streetMap,
             "🛰️ Satellite": satelliteMap,
             "⛰️ Topographic": topoMap
         };
-        
-        // Define overlay maps
+
         const overlayMaps = {
             "🌧️ NOAA 6hr Forecast": noaaPrecipForecast,
-            "📡 Live Radar": weatherRadar,
-            "🌡️ Temperature": temperatureOverlay
+            "📡 Live Radar": weatherRadar
         };
 
-        // Initialize map with enhanced styling
         map = L.map('map', {
-            layers: [satelliteMap, noaaPrecipForecast], // Default layers
+            layers: [satelliteMap, noaaPrecipForecast],
             zoomControl: false,
             attributionControl: false
-        }).setView([selectedCoords.lat, selectedCoords.lng], 4); // Show entire continental USA
-        
-        // Add custom zoom control in top-left
-        L.control.zoom({
-            position: 'topleft'
-        }).addTo(map);
+        }).setView([selectedCoords.lat, selectedCoords.lng], 4);
 
-        // Add custom layer control with enhanced styling
-        const layerControl = L.control.layers(baseMaps, overlayMaps, {
-            position: 'topright',
-            collapsed: false
-        }).addTo(map);
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        L.control.layers(baseMaps, overlayMaps, { position: 'topright', collapsed: false }).addTo(map);
+        L.control.scale({ position: 'bottomright', imperial: true, metric: true }).addTo(map);
 
-        // Add scale control
-        L.control.scale({
-            position: 'bottomright',
-            imperial: true,
-            metric: true
-        }).addTo(map);
-
-        // Enhanced marker with custom icon
         const customIcon = L.divIcon({
             className: 'custom-marker',
             html: '<div style="background: #007bff; border: 3px solid white; border-radius: 50%; width: 20px; height: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
             iconSize: [20, 20],
             iconAnchor: [10, 10]
         });
-        
+
         marker = L.marker([selectedCoords.lat, selectedCoords.lng], {
             icon: customIcon,
             draggable: true
         }).addTo(map);
 
-        // Enhanced click and drag handlers
         function updateCoordinates(latlng) {
             selectedCoords = latlng;
             latDisplay.textContent = selectedCoords.lat.toFixed(4);
             lonDisplay.textContent = selectedCoords.lng.toFixed(4);
-            
-            // Update forecast data when location changes
             if (!manualModeToggle.checked) {
                 getForecastData(selectedCoords.lat, selectedCoords.lng);
             }
         }
 
-        map.on('click', function(e) {
+        map.on('click', function (e) {
             if (startButton.disabled) return;
             marker.setLatLng(e.latlng);
             updateCoordinates(e.latlng);
         });
 
-        marker.on('dragend', function(e) {
+        marker.on('dragend', function (e) {
             if (startButton.disabled) return;
             updateCoordinates(e.target.getLatLng());
         });
 
-        // Add attribution control to bottom
-        L.control.attribution({
-            position: 'bottomleft',
-            prefix: false
-        }).addTo(map);
-
-        // Initialize forecast data
+        L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
         getForecastData(selectedCoords.lat, selectedCoords.lng);
     }
 
@@ -835,18 +1214,84 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resultsChart) resultsChart.destroy();
         resultsChart = new Chart(chartCanvas.getContext('2d'), {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Runoff (cfs)', data: [], borderColor: 'rgba(0, 123, 255, 1)', backgroundColor: 'rgba(0, 123, 255, 0.1)', yAxisID: 'y', tension: 0.3, fill: true }, { label: 'Rainfall (in/hr)', data: [], borderColor: 'rgba(108, 117, 125, 1)', backgroundColor: 'rgba(108, 117, 125, 0.1)', yAxisID: 'y1', tension: 0.3, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { title: { display: true, text: 'Time' } }, y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Runoff (cfs)' } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Rainfall (in/hr)' } } } }
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Runoff (cfs)',
+                        data: [],
+                        borderColor: '#22d3ee',
+                        backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Rainfall (in/hr)',
+                        data: [],
+                        borderColor: '#94a3b8',
+                        backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                        yAxisID: 'y1',
+                        tension: 0.3,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Time', color: '#9fb0c7' },
+                        ticks: { color: '#cbd5e1' },
+                        grid: { color: '#1f2937' }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Runoff (cfs)', color: '#9fb0c7' },
+                        ticks: { color: '#cbd5e1' },
+                        grid: { color: '#1f2937' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Rainfall (in/hr)', color: '#9fb0c7' },
+                        ticks: { color: '#cbd5e1' }
+                    }
+                }
+            }
         });
     }
 
     function startSimulation() {
         resultsTbody.innerHTML = '';
+        simulationData = [];
         initializeChart();
-        
+
+        // Gather all config
         form.querySelectorAll('input[type="range"]').forEach(input => {
             config[input.id] = parseFloat(input.value);
         });
+
+        // Add infiltration method
+        config.infiltration = document.getElementById('infiltration').value;
 
         if (!manualModeToggle.checked && !apiKeyInput.value) {
             updateStatus('API Key is required for live mode.', 'error');
@@ -856,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         my_catchment = new Subcatchment("WebAppCatchment", config);
         setUIState(true);
         progressContainer.style.display = 'block';
-        
+
         const timeStepDuration = config.timeStep * 1000;
 
         const executeStep = async () => {
@@ -874,23 +1319,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (manualModeToggle.checked) {
                     rainfall_in_hr = parseFloat(manualRainfallSlider.value);
                     updateStatus('Running in manual mode...', 'running');
-                    // Update info panel for manual mode
                     document.getElementById('current-rainfall').textContent = `${rainfall_in_hr.toFixed(3)} in/hr`;
                     document.getElementById('temperature').textContent = '-- °F';
                     document.getElementById('forecast-rainfall').textContent = '-- in';
                 } else {
                     updateStatus('Fetching weather...', 'running');
                     rainfall_in_hr = await getWeatherData(apiKeyInput.value, selectedCoords.lat, selectedCoords.lng);
-                    // Update forecast data periodically (every 5 steps to avoid too many requests)
-                    if (Math.random() < 0.2) { // 20% chance each step
+                    if (Math.random() < 0.2) {
                         getForecastData(selectedCoords.lat, selectedCoords.lng);
                     }
                 }
-                
+
                 updateStatus('Calculating runoff...', 'running');
                 const runoff_cfs = my_catchment.get_runoff(rainfall_in_hr, config.timeStep);
-                
-                if(!manualModeToggle.checked) updateStatus('Running...', 'running');
+
+                if (!manualModeToggle.checked) updateStatus('Running...', 'running');
                 updateResults(rainfall_in_hr, runoff_cfs);
             } catch (error) {
                 console.error("Error during executeStep:", error);
@@ -898,14 +1341,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 stopSimulation();
             }
         };
-        
+
         executeStep();
         simulationInterval = setInterval(executeStep, timeStepDuration);
     }
 
     function stopSimulation() {
-        if (simulationInterval) { clearInterval(simulationInterval); simulationInterval = null; }
-        if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+        if (simulationInterval) {
+            clearInterval(simulationInterval);
+            simulationInterval = null;
+        }
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
         progressContainer.style.display = 'none';
         progressBar.style.width = '0%';
         updateStatus('Idle', 'idle');
@@ -915,13 +1364,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function setUIState(isRunning) {
         startButton.disabled = isRunning;
         stopButton.disabled = !isRunning;
-        form.querySelectorAll('input').forEach(input => {
+        form.querySelectorAll('input, select').forEach(input => {
             if (input.id !== 'apiKey') {
                 input.disabled = isRunning;
             }
         });
         apiKeyInput.disabled = isRunning || manualModeToggle.checked;
         manualModeToggle.disabled = isRunning;
+        presetBtn.disabled = isRunning;
     }
 
     function updateStatus(message, state) {
@@ -930,6 +1380,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateResults(rainfall, runoff) {
         const timeString = new Date().toLocaleTimeString();
+        
+        // Store data for CSV export
+        simulationData.push({
+            time: timeString,
+            rainfall: rainfall,
+            runoff: runoff
+        });
+
         const newRow = resultsTbody.insertRow(0);
         newRow.innerHTML = `<td>${timeString}</td><td>${rainfall.toFixed(4)}</td><td>${runoff.toFixed(4)}</td>`;
         if (resultsTbody.rows.length > 50) resultsTbody.deleteRow(-1);
@@ -945,9 +1403,58 @@ document.addEventListener('DOMContentLoaded', () => {
         chart.update();
     }
 
+    // --- Preset Configuration ---
+    function applyUrbanPreset() {
+        // Urban area preset values
+        const preset = {
+            area_acres: 15,
+            width_ft: 500,
+            slope_pct: 2.0,
+            imperv_pct: 75,
+            n_imperv: 0.013,
+            n_perv: 0.20,
+            dstore_imperv_in: 0.05,
+            dstore_perv_in: 0.10,
+            zero_imperv_pct: 30
+        };
+
+        for (const [key, value] of Object.entries(preset)) {
+            const rangeInput = document.getElementById(key);
+            const numInput = document.getElementById(`${key}_num`);
+            if (rangeInput && numInput) {
+                rangeInput.value = value;
+                numInput.value = value;
+            }
+        }
+
+        // Set Green-Ampt infiltration with urban soil parameters
+        document.getElementById('infiltration').value = 'green_ampt';
+        renderInfilParamUI();
+        
+        setTimeout(() => {
+            const urbanGA = {
+                ga_Ks: 0.2,
+                ga_psi: 6.0,
+                ga_imd: 0.25
+            };
+            for (const [key, value] of Object.entries(urbanGA)) {
+                const rangeInput = document.getElementById(key);
+                const numInput = document.getElementById(`${key}_num`);
+                if (rangeInput && numInput) {
+                    rangeInput.value = value;
+                    numInput.value = value;
+                }
+            }
+        }, 100);
+
+        updateStatus('Urban preset applied', 'idle');
+    }
+
     startButton.addEventListener('click', startSimulation);
     stopButton.addEventListener('click', stopSimulation);
-    
+    exportCSVBtn.addEventListener('click', exportToCSV);
+    presetBtn.addEventListener('click', applyUrbanPreset);
+
     // Initialize UI
     initializeMap();
     updateStatus('Idle', 'idle');
