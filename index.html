@@ -1166,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         map = L.map('map', {
-            layers: [satelliteMap, noaaPrecipForecast],
+            layers: [satelliteMap, noaaPrecipForecast, weatherRadar],
             zoomControl: false,
             attributionControl: false
         }).setView([selectedCoords.lat, selectedCoords.lng], 4);
